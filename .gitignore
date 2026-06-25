@@ -1,0 +1,17 @@
+# Python virtual environment
+mjx39/
+mjx_env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# VSCode
+.vscode/
+
+# SVG出力
+*.svg
+
+# 実験結果
+results/
+logs/
