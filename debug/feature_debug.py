@@ -1,4 +1,4 @@
-#特徴量の意味
+#特徴量の意味...
 import mjx
 import numpy as np
 
