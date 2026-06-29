@@ -8,12 +8,15 @@ event_types = set()
 action_table = defaultdict(set)
 
 round_no = 0
+max_steps = 200
+step_count = 0
 
-while not env.done():
+while not env.done() and step_count < max_steps:
 
     obs_dict = env.reset() if round_no == 0 else obs_dict
 
-    while len(obs_dict) > 0:
+    while len(obs_dict) > 0 and step_count < max_steps:
+        step_count += 1
 
         actions = {}
 
@@ -49,6 +52,9 @@ while not env.done():
         obs_dict = env.step(actions)
 
     round_no += 1
+
+if step_count >= max_steps:
+    print(f"\n=== STOPPED BY MAX_STEPS ({max_steps}) ===")
 
 print("\n=== EVENT TYPES ===")
 

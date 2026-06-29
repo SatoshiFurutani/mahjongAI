@@ -22,6 +22,9 @@ ACTION_TYPE_MAP = {
     "RIICHI": "Reach",
     "RON": "Ron",
     "TSUMO": "Tsumo",
+    "CLOSED_KAN": "Ankan",
+    "ADDED_KAN": "Kakan",
+    "OPEN_KAN": "Daiminkan",
     "PASS": "Pass",
     "NO": "Pass",
 }
@@ -70,9 +73,9 @@ def observation_to_dto(obs: Any, state: Optional[Any] = None, default_remaining_
         "honba": _extract_first_int(state_json, ["honba", "numHonba", "roundSticks"], 0),
         "reachSticks": _extract_first_int(state_json, ["reachSticks", "riichiSticks", "deposit", "deposits"], 0),
         "dealer": dealer,
-        "remainingTileCount": _extract_remaining_tile_count(state_json, default_remaining_tile_count),
+        "remainingTileCount": _extract_remaining_tile_count(state_json, events, default_remaining_tile_count),
         "scores": scores,
-        "doraIndicators": [tile_to_dto(tile) for tile in _call_or_default(obs, "doras", [])],
+        "doraIndicators": [tile_type_to_dto(tile_type) for tile_type in _call_or_default(obs, "doras", [])],
         "players": players,
         "selfHand": [tile_to_dto(tile) for tile in _closed_tiles(obs)],
         "legalActions": [action_to_dto(action) for action in _call_or_default(obs, "legal_actions", [])],
@@ -87,11 +90,20 @@ def tile_to_dto(tile: Any) -> dict[str, Any]:
         red = bool(tile.get("red", tile.get("isRed", tile.get("is_red", False))))
         return {"type": tile_type, "red": red}
 
+    if isinstance(tile, int):
+        return {"type": _tile_id_to_type(tile), "red": _tile_id_is_red(tile)}
+
     tile_type = _call_or_default(tile, "type", tile)
     return {
         "type": _as_int(tile_type),
         "red": bool(_call_or_default(tile, "is_red", False)),
     }
+
+
+def tile_type_to_dto(tile_type: Any) -> dict[str, Any]:
+    """MJX TileTypeまたは牌種番号をTileDtoへ変換する。"""
+
+    return {"type": _as_int(tile_type), "red": False}
 
 
 def action_to_dto(action: Any) -> dict[str, Any]:
@@ -132,7 +144,12 @@ def _apply_events_to_players(events: list[dict[str, Any]], players: list[dict[st
 
     for event in events:
         event_type = _normalize_event_type(event.get("type", event.get("eventType", "")))
+        if not event_type and _event_tile(event) is not None:
+            event_type = "DISCARD"
+
         player_index = _event_player(event)
+        if player_index is None and event_type in {"DRAW", "DISCARD", "TSUMOGIRI", "DAHAI"}:
+            player_index = 0
 
         if player_index is None or not 0 <= player_index < 4:
             continue
@@ -206,14 +223,14 @@ def _extract_round_number(obs: Any, state_json: dict[str, Any]) -> int:
     return _as_int(_call_or_default(obs, "round", 0))
 
 
-def _extract_remaining_tile_count(state_json: dict[str, Any], default_value: int) -> int:
+def _extract_remaining_tile_count(state_json: dict[str, Any], events: list[dict[str, Any]], default_value: int) -> int:
     direct = _extract_first_int(state_json, ["remainingTileCount", "wallCount", "numRemainingTiles"], None)
-    if direct is not None:
+    if direct is not None and direct <= default_value:
         return direct
 
-    hidden = state_json.get("hiddenState", {})
-    if isinstance(hidden, dict) and isinstance(hidden.get("wall"), list):
-        return len(hidden["wall"])
+    draw_count = sum(1 for event in events if _normalize_event_type(event.get("type", event.get("eventType", ""))) == "DRAW")
+    if draw_count > 0:
+        return max(0, default_value - draw_count)
 
     return default_value
 
@@ -252,7 +269,11 @@ def _enum_name(value: Any) -> str:
     text = str(value)
     if "." in text:
         text = text.rsplit(".", 1)[-1]
-    return text.upper()
+    text = text.upper()
+    for prefix in ("ACTION_TYPE_", "EVENT_TYPE_"):
+        if text.startswith(prefix):
+            return text[len(prefix):]
+    return text
 
 
 def _call_or_default(obj: Any, method_name: str, default: Any) -> Any:
@@ -290,6 +311,16 @@ def _as_int(value: Any) -> int:
     if enum_value is not None:
         return int(enum_value)
     return int(value)
+
+
+def _tile_id_to_type(tile_id: int) -> int:
+    return int(tile_id) // 4
+
+
+def _tile_id_is_red(tile_id: int) -> bool:
+    # MJXの牌IDは同一牌種4枚が連番。赤5は各5の先頭IDとして扱われる想定。
+    tile_type = _tile_id_to_type(tile_id)
+    return tile_type in {4, 13, 22} and int(tile_id) % 4 == 0
 
 
 def _pad(values: list[Any], size: int, fill: Any) -> list[Any]:
