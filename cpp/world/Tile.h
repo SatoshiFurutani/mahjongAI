@@ -5,8 +5,8 @@
 
 namespace mahjong::world {
 
-// TileType represents the canonical 34 Mahjong tile kinds.
-// It intentionally does not contain MJX tile IDs or physical copy IDs.
+// 麻雀牌を34種類の論理種別として表す。
+// MJXのtile IDや物理牌のコピー番号は保持せず、AI内部の判断に必要な情報だけに絞る。
 enum class TileType : std::uint8_t {
     M1 = 0,
     M2,
@@ -45,6 +45,8 @@ enum class TileType : std::uint8_t {
     Count
 };
 
+// 1枚の牌を表す値オブジェクト。
+// 種別と赤ドラかどうかだけを持ち、ゲームシミュレータ由来の情報は混ぜない。
 class Tile {
 public:
     Tile() = default;
@@ -61,6 +63,7 @@ private:
     bool redDora_ {false};
 };
 
+// Hand内部の34要素配列とTileTypeを相互変換するための補助関数。
 [[nodiscard]] std::uint8_t toIndex(TileType type);
 [[nodiscard]] TileType tileTypeFromIndex(std::uint8_t index);
 [[nodiscard]] bool isValidTileType(TileType type);

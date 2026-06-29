@@ -9,6 +9,8 @@
 
 namespace mahjong::world {
 
+// 1局面の世界状態。
+// MJXのObservationを直接持たず、AIが解釈しやすい独自の状態だけを保持する。
 class World {
 public:
     static constexpr std::uint8_t kPlayerCount = 4;
@@ -40,8 +42,13 @@ public:
     void setRemainingTileCount(std::uint8_t remainingTileCount);
 
 private:
+    // 4人分の状態。添字はプレイヤー番号として扱う。
     Players players_ {};
+
+    // 表示済みドラをTileとして保持する。裏ドラなどを入れるかは変換層側で決める。
     std::vector<Tile> doraTiles_ {};
+
+    // roundNumberは東1局を0とするような内部表現を想定する。
     std::uint8_t roundNumber_ {0};
     std::uint8_t honba_ {0};
     std::uint8_t reachSticks_ {0};
