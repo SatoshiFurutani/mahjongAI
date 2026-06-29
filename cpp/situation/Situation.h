@@ -29,6 +29,7 @@ enum class HandSpeed : std::uint8_t {
 // ここには判断ロジックを置かず、GoalSelectorやFeatureGeneratorが読む派生情報だけを保持する。
 class Situation {
 public:
+    using Scores = std::array<int, 4>;
     using VisibleCounts = std::array<std::uint8_t, 34>;
 
     [[nodiscard]] std::uint8_t selfPlayerIndex() const;
@@ -42,8 +43,16 @@ public:
     [[nodiscard]] const std::vector<std::uint8_t>& opponentReachPlayers() const;
     [[nodiscard]] std::uint8_t remainingTileCount() const;
     [[nodiscard]] std::uint8_t doraCount() const;
-    [[nodiscard]] std::uint8_t pairCount() const;
     [[nodiscard]] std::uint8_t openMeldCount() const;
+    [[nodiscard]] const Scores& scores() const;
+    [[nodiscard]] int selfScore() const;
+    [[nodiscard]] std::uint8_t selfRank() const;
+    [[nodiscard]] int pointGapToNextRank() const;
+    [[nodiscard]] int pointGapFromLowerRank() const;
+    [[nodiscard]] std::uint8_t roundNumber() const;
+    [[nodiscard]] std::uint8_t honba() const;
+    [[nodiscard]] std::uint8_t reachSticks() const;
+    [[nodiscard]] bool isAllLast() const;
     [[nodiscard]] const VisibleCounts& visibleTileCounts() const;
 
     void setSelfPlayerIndex(std::uint8_t selfPlayerIndex);
@@ -55,8 +64,15 @@ public:
     void setOpponentReachPlayers(const std::vector<std::uint8_t>& opponentReachPlayers);
     void setRemainingTileCount(std::uint8_t remainingTileCount);
     void setDoraCount(std::uint8_t doraCount);
-    void setPairCount(std::uint8_t pairCount);
     void setOpenMeldCount(std::uint8_t openMeldCount);
+    void setScores(const Scores& scores);
+    void setSelfRank(std::uint8_t selfRank);
+    void setPointGapToNextRank(int pointGapToNextRank);
+    void setPointGapFromLowerRank(int pointGapFromLowerRank);
+    void setRoundNumber(std::uint8_t roundNumber);
+    void setHonba(std::uint8_t honba);
+    void setReachSticks(std::uint8_t reachSticks);
+    void setAllLast(bool isAllLast);
     void setVisibleTileCounts(const VisibleCounts& visibleTileCounts);
 
 private:
@@ -69,8 +85,20 @@ private:
     std::vector<std::uint8_t> opponentReachPlayers_ {};
     std::uint8_t remainingTileCount_ {70};
     std::uint8_t doraCount_ {0};
-    std::uint8_t pairCount_ {0};
     std::uint8_t openMeldCount_ {0};
+
+    // 点数・局数・供託は上位目標の制約に使う。
+    // 特にオーラスでは局収支より最終順位条件を優先する。
+    Scores scores_ {};
+    std::uint8_t selfRank_ {4};
+    int pointGapToNextRank_ {0};
+    int pointGapFromLowerRank_ {0};
+    std::uint8_t roundNumber_ {0};
+    std::uint8_t honba_ {0};
+    std::uint8_t reachSticks_ {0};
+    bool isAllLast_ {false};
+
+    // 各牌の安全度計算など、別ロジックが参照するための公開情報。
     VisibleCounts visibleTileCounts_ {};
 };
 

@@ -1,7 +1,6 @@
 #include "SituationAnalyzer.h"
 
 #include <algorithm>
-#include <limits>
 #include <stdexcept>
 
 namespace mahjong::situation {
@@ -98,6 +97,7 @@ Situation SituationAnalyzer::analyze(const world::World& world, std::uint8_t sel
 
     const world::Player& self = world.player(selfPlayerIndex);
     const std::int8_t shanten = calculateShanten(self);
+    const Situation::Scores scores = buildScores(world);
 
     std::vector<std::uint8_t> opponentReachPlayers;
     for (std::uint8_t playerIndex = 0; playerIndex < world::World::kPlayerCount; ++playerIndex) {
@@ -116,8 +116,15 @@ Situation SituationAnalyzer::analyze(const world::World& world, std::uint8_t sel
     situation.setOpponentReachPlayers(opponentReachPlayers);
     situation.setRemainingTileCount(world.remainingTileCount());
     situation.setDoraCount(countDora(self, world));
-    situation.setPairCount(countPairs(self.hand().counts()));
     situation.setOpenMeldCount(static_cast<std::uint8_t>(self.openMelds().size()));
+    situation.setScores(scores);
+    situation.setSelfRank(calculateRank(scores, selfPlayerIndex));
+    situation.setPointGapToNextRank(calculatePointGapToNextRank(scores, selfPlayerIndex));
+    situation.setPointGapFromLowerRank(calculatePointGapFromLowerRank(scores, selfPlayerIndex));
+    situation.setRoundNumber(world.roundNumber());
+    situation.setHonba(world.honba());
+    situation.setReachSticks(world.reachSticks());
+    situation.setAllLast(world.roundNumber() >= 7);
     situation.setVisibleTileCounts(buildVisibleTileCounts(world, selfPlayerIndex));
 
     return situation;
@@ -186,13 +193,6 @@ std::int8_t SituationAnalyzer::calculateSevenPairsShanten(const world::Hand::Cou
     return static_cast<std::int8_t>(6 - pairs + missingUniqueTiles);
 }
 
-std::uint8_t SituationAnalyzer::countPairs(const world::Hand::Counts& counts) const
-{
-    return static_cast<std::uint8_t>(std::count_if(counts.begin(), counts.end(), [](std::uint8_t count) {
-        return count >= 2;
-    }));
-}
-
 std::uint8_t SituationAnalyzer::countDora(const world::Player& player, const world::World& world) const
 {
     std::uint8_t doraCount = 0;
@@ -212,6 +212,65 @@ std::uint8_t SituationAnalyzer::countDora(const world::Player& player, const wor
     }
 
     return doraCount;
+}
+
+Situation::Scores SituationAnalyzer::buildScores(const world::World& world) const
+{
+    Situation::Scores scores {};
+    for (std::uint8_t playerIndex = 0; playerIndex < world::World::kPlayerCount; ++playerIndex) {
+        scores[playerIndex] = world.player(playerIndex).score();
+    }
+    return scores;
+}
+
+std::uint8_t SituationAnalyzer::calculateRank(const Situation::Scores& scores, std::uint8_t selfPlayerIndex) const
+{
+    std::uint8_t rank = 1;
+    const int selfScore = scores.at(selfPlayerIndex);
+    for (std::uint8_t playerIndex = 0; playerIndex < world::World::kPlayerCount; ++playerIndex) {
+        if (playerIndex != selfPlayerIndex && scores[playerIndex] > selfScore) {
+            ++rank;
+        }
+    }
+    return rank;
+}
+
+int SituationAnalyzer::calculatePointGapToNextRank(const Situation::Scores& scores, std::uint8_t selfPlayerIndex) const
+{
+    const int selfScore = scores.at(selfPlayerIndex);
+    int gap = 0;
+
+    for (std::uint8_t playerIndex = 0; playerIndex < world::World::kPlayerCount; ++playerIndex) {
+        if (playerIndex == selfPlayerIndex || scores[playerIndex] <= selfScore) {
+            continue;
+        }
+
+        const int candidateGap = scores[playerIndex] - selfScore;
+        if (gap == 0 || candidateGap < gap) {
+            gap = candidateGap;
+        }
+    }
+
+    return gap;
+}
+
+int SituationAnalyzer::calculatePointGapFromLowerRank(const Situation::Scores& scores, std::uint8_t selfPlayerIndex) const
+{
+    const int selfScore = scores.at(selfPlayerIndex);
+    int gap = 0;
+
+    for (std::uint8_t playerIndex = 0; playerIndex < world::World::kPlayerCount; ++playerIndex) {
+        if (playerIndex == selfPlayerIndex || scores[playerIndex] >= selfScore) {
+            continue;
+        }
+
+        const int candidateGap = selfScore - scores[playerIndex];
+        if (gap == 0 || candidateGap < gap) {
+            gap = candidateGap;
+        }
+    }
+
+    return gap;
 }
 
 Situation::VisibleCounts SituationAnalyzer::buildVisibleTileCounts(const world::World& world, std::uint8_t selfPlayerIndex) const

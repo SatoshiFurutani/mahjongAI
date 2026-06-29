@@ -57,14 +57,54 @@ std::uint8_t Situation::doraCount() const
     return doraCount_;
 }
 
-std::uint8_t Situation::pairCount() const
-{
-    return pairCount_;
-}
-
 std::uint8_t Situation::openMeldCount() const
 {
     return openMeldCount_;
+}
+
+const Situation::Scores& Situation::scores() const
+{
+    return scores_;
+}
+
+int Situation::selfScore() const
+{
+    return scores_.at(selfPlayerIndex_);
+}
+
+std::uint8_t Situation::selfRank() const
+{
+    return selfRank_;
+}
+
+int Situation::pointGapToNextRank() const
+{
+    return pointGapToNextRank_;
+}
+
+int Situation::pointGapFromLowerRank() const
+{
+    return pointGapFromLowerRank_;
+}
+
+std::uint8_t Situation::roundNumber() const
+{
+    return roundNumber_;
+}
+
+std::uint8_t Situation::honba() const
+{
+    return honba_;
+}
+
+std::uint8_t Situation::reachSticks() const
+{
+    return reachSticks_;
+}
+
+bool Situation::isAllLast() const
+{
+    return isAllLast_;
 }
 
 const Situation::VisibleCounts& Situation::visibleTileCounts() const
@@ -117,14 +157,49 @@ void Situation::setDoraCount(std::uint8_t doraCount)
     doraCount_ = doraCount;
 }
 
-void Situation::setPairCount(std::uint8_t pairCount)
-{
-    pairCount_ = pairCount;
-}
-
 void Situation::setOpenMeldCount(std::uint8_t openMeldCount)
 {
     openMeldCount_ = openMeldCount;
+}
+
+void Situation::setScores(const Scores& scores)
+{
+    scores_ = scores;
+}
+
+void Situation::setSelfRank(std::uint8_t selfRank)
+{
+    selfRank_ = selfRank;
+}
+
+void Situation::setPointGapToNextRank(int pointGapToNextRank)
+{
+    pointGapToNextRank_ = pointGapToNextRank;
+}
+
+void Situation::setPointGapFromLowerRank(int pointGapFromLowerRank)
+{
+    pointGapFromLowerRank_ = pointGapFromLowerRank;
+}
+
+void Situation::setRoundNumber(std::uint8_t roundNumber)
+{
+    roundNumber_ = roundNumber;
+}
+
+void Situation::setHonba(std::uint8_t honba)
+{
+    honba_ = honba;
+}
+
+void Situation::setReachSticks(std::uint8_t reachSticks)
+{
+    reachSticks_ = reachSticks;
+}
+
+void Situation::setAllLast(bool isAllLast)
+{
+    isAllLast_ = isAllLast;
 }
 
 void Situation::setVisibleTileCounts(const VisibleCounts& visibleTileCounts)
