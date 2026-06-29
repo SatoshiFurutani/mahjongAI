@@ -22,9 +22,9 @@ void River::clear()
     discards_.clear();
 }
 
-void River::addDiscard(const Tile& tile, bool afterReach)
+void River::addDiscard(const Tile& tile, bool afterReach, bool tsumogiri)
 {
-    discards_.push_back(RiverTile {tile, afterReach, false});
+    discards_.push_back(RiverTile {tile, afterReach, tsumogiri, false});
 }
 
 bool River::markCalled(std::size_t discardIndex)

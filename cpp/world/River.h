@@ -8,10 +8,11 @@
 namespace mahjong::world {
 
 // 河に置かれた1枚の捨て牌。
-// 順序、リーチ後の捨て牌か、鳴かれて河から消えたかを追跡する。
+// 順序、リーチ後、自摸切り、鳴かれたかを追跡する。
 struct RiverTile {
     Tile tile {};
     bool afterReach {false};
+    bool tsumogiri {false};
     bool called {false};
 };
 
@@ -24,7 +25,7 @@ public:
     [[nodiscard]] bool empty() const;
 
     void clear();
-    void addDiscard(const Tile& tile, bool afterReach = false);
+    void addDiscard(const Tile& tile, bool afterReach = false, bool tsumogiri = false);
     bool markCalled(std::size_t discardIndex);
 
 private:

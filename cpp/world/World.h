@@ -26,7 +26,6 @@ public:
     [[nodiscard]] std::uint8_t honba() const;
     [[nodiscard]] std::uint8_t reachSticks() const;
     [[nodiscard]] std::uint8_t dealer() const;
-    [[nodiscard]] std::uint8_t turn() const;
     [[nodiscard]] std::uint8_t remainingTileCount() const;
 
     void setPlayers(const Players& players);
@@ -38,7 +37,6 @@ public:
     void setHonba(std::uint8_t honba);
     void setReachSticks(std::uint8_t reachSticks);
     void setDealer(std::uint8_t dealer);
-    void setTurn(std::uint8_t turn);
     void setRemainingTileCount(std::uint8_t remainingTileCount);
 
 private:
@@ -53,7 +51,9 @@ private:
     std::uint8_t honba_ {0};
     std::uint8_t reachSticks_ {0};
     std::uint8_t dealer_ {0};
-    std::uint8_t turn_ {0};
+
+    // 局内の進行度は巡目を直接持たず、山の残り枚数で表す。
+    // 巡目は「何巡目か」の定義が親/鳴き/途中流局で揺れやすいため、必要なら特徴量生成側で派生させる。
     std::uint8_t remainingTileCount_ {70};
 };
 

@@ -62,11 +62,6 @@ std::uint8_t World::dealer() const
     return dealer_;
 }
 
-std::uint8_t World::turn() const
-{
-    return turn_;
-}
-
 std::uint8_t World::remainingTileCount() const
 {
     return remainingTileCount_;
@@ -117,11 +112,6 @@ void World::setDealer(std::uint8_t dealer)
 {
     validatePlayerIndex(dealer);
     dealer_ = dealer;
-}
-
-void World::setTurn(std::uint8_t turn)
-{
-    turn_ = turn;
 }
 
 void World::setRemainingTileCount(std::uint8_t remainingTileCount)
